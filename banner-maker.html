@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>バナーメーカー | fortune luck Cat</title>
+<style>
+  :root{--bg:#faf6ee;--card:#fff;--ink:#2a2f4a;--muted:#6d6a5e;--accent:#b87f24;--line:rgba(42,47,74,.16)}
+  @media (prefers-color-scheme:dark){:root{--bg:#191e33;--card:#212845;--ink:#f0e9d9;--muted:#a8a293;--accent:#e3aa4f;--line:rgba(240,233,217,.15)}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;line-height:1.6}
+  main{max-width:960px;margin:0 auto;padding:24px 16px 48px}
+  h1{font-size:1.4rem;margin:0 0 4px}p.lead{color:var(--muted);margin:0 0 20px}
+  .grid{display:grid;gap:20px;grid-template-columns:280px 1fr}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  label{display:block;font-size:.85rem;color:var(--muted);margin:12px 0 4px}label:first-child{margin-top:0}
+  input,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+  button{margin-top:14px;margin-right:8px;padding:9px 16px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:inherit;cursor:pointer}
+  button.sub{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  #stage{width:100%;display:block;border-radius:8px;border:1px solid var(--line)}
+  .back{display:inline-block;margin-top:20px;color:var(--accent)}
+</style></head><body><main>
+<h1>🐱 バナーメーカー</h1>
+<p class="lead">文字を入れて、SNS用のバナーをブラウザ内で作れます(サーバー送信なし・無料)。</p>
+<div class="grid">
+  <div class="panel">
+    <label for="title">タイトル</label><input id="title" value="fortune luck Cat">
+    <label for="sub">サブタイトル</label><input id="sub" value="FF14 フリーカンパニー / Masamune">
+    <label for="theme">テーマ</label>
+    <select id="theme"><option value="night">夜空と月</option><option value="gold">金運ゴールド</option><option value="sea">海風</option></select>
+    <label for="size">サイズ</label>
+    <select id="size"><option value="1500x500">X/ヘッダー 1500×500</option><option value="1200x630">OGP 1200×630</option><option value="1080x1080">Instagram 1080×1080</option></select>
+    <button id="png">PNG保存</button><button id="svg" class="sub">SVG保存</button>
+  </div>
+  <div class="panel"><div id="wrap"></div></div>
+</div>
+<a class="back" href="index.html">← トップへ戻る</a>
+</main>
+<script>
+const THEMES={
+  night:{bg:["#191e33","#2c3558"],ink:"#f0e9d9",accent:"#e3aa4f",cat:"#0e1224"},
+  gold:{bg:["#f6e7bf","#e3aa4f"],ink:"#2a2f4a",accent:"#8a5a12",cat:"#2a2f4a"},
+  sea:{bg:["#d9efe9","#6fb3a3"],ink:"#1f3b36",accent:"#c05c4a",cat:"#1f3b36"}
+};
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function cat(x,y,s,c,eye){return `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}">
+<path d="M-60 -20 L-52 -78 L-14 -42 Z"/><path d="M60 -20 L52 -78 L14 -42 Z"/>
+<ellipse cx="0" cy="0" rx="66" ry="52"/>
+<ellipse cx="-24" cy="-4" rx="9" ry="12" fill="${eye}"/><ellipse cx="24" cy="-4" rx="9" ry="12" fill="${eye}"/>
+<path d="M-6 14 L6 14 L0 22 Z" fill="${eye}"/>
+<g stroke="${eye}" stroke-width="2" fill="none"><path d="M-70 8 L-34 14M-70 22 L-34 20M70 8 L34 14M70 22 L34 20"/></g></g>`}
+function build(){
+  const [w,h]=document.getElementById("size").value.split("x").map(Number);
+  const t=THEMES[document.getElementById("theme").value];
+  const title=esc(document.getElementById("title").value), sub=esc(document.getElementById("sub").value);
+  const sq=w===h, u=Math.min(w,h*1.6)/1500;
+  const tx=sq?w/2:w*.08, anchor=sq?"middle":"start";
+  const ty=sq?h*.62:h*.5, fs=(sq?96:110*u*1.2);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${t.bg[0]}"/><stop offset="1" stop-color="${t.bg[1]}"/></linearGradient></defs>
+<rect width="${w}" height="${h}" fill="url(#g)"/>
+<circle cx="${w*.82}" cy="${h*.3}" r="${Math.min(w,h)*.16}" fill="${t.accent}" opacity=".85"/>
+${cat(sq?w/2:w*.82,sq?h*.28:h*.62,Math.min(w,h)/260*(sq?1.1:.9),t.cat,t.accent)}
+<text x="${tx}" y="${ty}" font-family="Hiragino Sans,Noto Sans JP,sans-serif" font-size="${fs}" font-weight="700" fill="${t.ink}" text-anchor="${anchor}">${title}</text>
+<text x="${tx}" y="${ty+fs*.6}" font-family="Hiragino Sans,Noto Sans JP,sans-serif" font-size="${fs*.36}" fill="${t.accent}" text-anchor="${anchor}">${sub}</text>
+</svg>`}
+const wrap=document.getElementById("wrap");
+function render(){wrap.innerHTML=build();const s=wrap.firstChild;s.id="stage";s.removeAttribute("width");s.removeAttribute("height")}
+["title","sub","theme","size"].forEach(i=>document.getElementById(i).addEventListener("input",render));
+function save(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+document.getElementById("svg").onclick=()=>save(new Blob([build()],{type:"image/svg+xml"}),"banner.svg");
+document.getElementById("png").onclick=()=>{
+  const [w,h]=document.getElementById("size").value.split("x").map(Number);
+  const img=new Image();
+  img.onload=()=>{const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0);c.toBlob(b=>save(b,"banner.png"))};
+  img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(build());
+};
+render();
+</script></body></html>
