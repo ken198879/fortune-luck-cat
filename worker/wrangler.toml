@@ -1,0 +1,11 @@
+name = "fortune-luck-cat-imagegen"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[ai]
+binding = "AI"
+
+[vars]
+# 公開サイトのオリジンに変更してください(例: https://example.github.io)
+ALLOWED_ORIGIN = "*"
+# ADMIN_TOKEN は vars に書かず、`npx wrangler secret put ADMIN_TOKEN` で登録します

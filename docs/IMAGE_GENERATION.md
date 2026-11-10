@@ -11,3 +11,17 @@ Claudeは写真のような画像を直接は出力できません。このリ�
 
 ## できないこと
 リアルな写真風画像は外部の画像生成API(有料・APIキー管理とサーバー側実装が必要)が必須のため、「月額ゼロ」の方針により未対応です。必要になった場合は別途ご相談ください。
+
+## 3. 管理者向け: プロンプト/画像からAI生成(Cloudflare Workers AI)
+`image-studio.html` が `worker/` のAPIを呼び、テキスト→画像と画像→画像を行います。無料枠内なら0円です。
+- テキスト→画像: FLUX.1 schnell / 画像→画像: Stable Diffusion 1.5 img2img / 日本語は自動で英訳
+- 認証: 管理者トークン(Worker側のシークレット)。トークンなしでは生成できません
+
+### セットアップ(初回のみ)
+```
+cd worker
+npx wrangler login
+npx wrangler secret put ADMIN_TOKEN   # 任意の長い文字列
+npx wrangler deploy                   # 表示されたURLを image-studio.html に入力
+```
+`wrangler.toml` の `ALLOWED_ORIGIN` は公開サイトのオリジンに変更してください。
