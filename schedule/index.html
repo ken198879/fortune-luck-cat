@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>マイスケジュール</title>
+<meta name="description" content="個人用スケジュール管理アプリ（カレンダー・繰り返し予定・リマインダー）">
+<meta name="theme-color" content="#4f6bed" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161c" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="スケジュール">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="prevBtn" aria-label="前の月">‹</button>
+  <h1 id="monthLabel" class="month-label"></h1>
+  <button class="icon-btn" id="nextBtn" aria-label="次の月">›</button>
+  <div class="spacer"></div>
+  <button class="chip" id="todayBtn">今日</button>
+  <button class="icon-btn" id="menuBtn" aria-label="メニュー">⋯</button>
+</header>
+
+<main>
+  <div class="weekdays" aria-hidden="true">
+    <span class="sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="sat">土</span>
+  </div>
+  <div id="grid" class="grid" role="grid"></div>
+
+  <section class="agenda">
+    <h2 id="agendaTitle"></h2>
+    <ul id="agendaList" class="event-list"></ul>
+  </section>
+
+  <section class="agenda upcoming">
+    <h2>これからの予定（7日間）</h2>
+    <ul id="upcomingList" class="event-list"></ul>
+  </section>
+
+  <div id="installBanner" class="banner" hidden>
+    <span>ホーム画面に追加するとアプリとして使えます</span>
+    <button class="chip primary" id="installBtn">インストール</button>
+  </div>
+</main>
+
+<button class="fab" id="addBtn" aria-label="予定を追加">＋</button>
+
+<!-- 予定編集ダイアログ -->
+<dialog id="eventDialog" class="sheet">
+  <form id="eventForm" method="dialog">
+    <div class="sheet-head">
+      <button type="button" class="link" data-close>キャンセル</button>
+      <h3 id="formTitle">予定を追加</h3>
+      <button type="submit" class="link strong" value="save">保存</button>
+    </div>
+    <div class="sheet-body">
+      <label class="field">
+        <span>タイトル</span>
+        <input name="title" required maxlength="100" placeholder="例：歯医者">
+      </label>
+      <div class="row">
+        <label class="field grow">
+          <span>日付</span>
+          <input type="date" name="date" required>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" name="allDay">
+          <span>終日</span>
+        </label>
+      </div>
+      <div class="row" id="timeRow">
+        <label class="field grow">
+          <span>開始</span>
+          <input type="time" name="start" value="10:00">
+        </label>
+        <label class="field grow">
+          <span>終了</span>
+          <input type="time" name="end" value="11:00">
+        </label>
+      </div>
+
+      <label class="field">
+        <span>繰り返し</span>
+        <select name="freq">
+          <option value="none">なし</option>
+          <option value="daily">毎日</option>
+          <option value="weekly">毎週</option>
+          <option value="monthly">毎月</option>
+          <option value="yearly">毎年</option>
+        </select>
+      </label>
+      <div id="repeatOpts" hidden>
+        <div class="row">
+          <label class="field grow">
+            <span>間隔</span>
+            <select name="interval">
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </label>
+          <label class="field grow">
+            <span>終了日（任意）</span>
+            <input type="date" name="until">
+          </label>
+        </div>
+        <fieldset id="byDayField" class="days" hidden>
+          <legend>曜日</legend>
+          <label><input type="checkbox" name="byDay" value="0"><span>日</span></label>
+          <label><input type="checkbox" name="byDay" value="1"><span>月</span></label>
+          <label><input type="checkbox" name="byDay" value="2"><span>火</span></label>
+          <label><input type="checkbox" name="byDay" value="3"><span>水</span></label>
+          <label><input type="checkbox" name="byDay" value="4"><span>木</span></label>
+          <label><input type="checkbox" name="byDay" value="5"><span>金</span></label>
+          <label><input type="checkbox" name="byDay" value="6"><span>土</span></label>
+        </fieldset>
+      </div>
+
+      <label class="field">
+        <span>リマインド</span>
+        <select name="remind">
+          <option value="">なし</option>
+          <option value="0">開始時刻</option>
+          <option value="5">5分前</option>
+          <option value="10">10分前</option>
+          <option value="15">15分前</option>
+          <option value="30">30分前</option>
+          <option value="60">1時間前</option>
+          <option value="1440">1日前</option>
+        </select>
+        <small class="hint">終日の予定は当日 9:00 を基準に通知します</small>
+      </label>
+
+      <fieldset class="colors">
+        <legend>色</legend>
+        <label><input type="radio" name="color" value="blue" checked><span class="sw c-blue"></span></label>
+        <label><input type="radio" name="color" value="green"><span class="sw c-green"></span></label>
+        <label><input type="radio" name="color" value="orange"><span class="sw c-orange"></span></label>
+        <label><input type="radio" name="color" value="red"><span class="sw c-red"></span></label>
+        <label><input type="radio" name="color" value="purple"><span class="sw c-purple"></span></label>
+        <label><input type="radio" name="color" value="gray"><span class="sw c-gray"></span></label>
+      </fieldset>
+
+      <label class="field">
+        <span>メモ</span>
+        <textarea name="memo" rows="3" maxlength="2000"></textarea>
+      </label>
+
+      <div id="deleteArea" class="delete-area" hidden>
+        <button type="button" class="danger" id="deleteOneBtn" hidden>この回のみ削除</button>
+        <button type="button" class="danger" id="deleteAllBtn">削除</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- メニュー -->
+<dialog id="menuDialog" class="sheet">
+  <div class="sheet-head">
+    <span></span>
+    <h3>メニュー</h3>
+    <button type="button" class="link strong" data-close>閉じる</button>
+  </div>
+  <div class="sheet-body menu">
+    <button type="button" id="notifyBtn">🔔 通知を有効にする</button>
+    <p class="hint" id="notifyStatus"></p>
+    <button type="button" id="testNotifyBtn">テスト通知を送る</button>
+    <hr>
+    <button type="button" id="icsBtn">📅 端末のカレンダーに書き出す（.ics）</button>
+    <p class="hint">確実に通知を受けたい予定は、.ics を端末標準のカレンダーに取り込むのがおすすめです。</p>
+    <hr>
+    <button type="button" id="backupBtn">💾 バックアップを保存（JSON）</button>
+    <label class="file-btn">📂 バックアップから復元
+      <input type="file" id="restoreInput" accept="application/json,.json" hidden>
+    </label>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
